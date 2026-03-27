@@ -14,7 +14,10 @@ import com.example.catsinapp.ui.components.PetHeroSection
 import com.example.catsinapp.ui.components.PetInfoChips
 
 @Composable
-fun PetDetailScreen(petId: String, navController: NavController) {
+fun PetDetailScreen(
+    petId: String,
+    onBack: () -> Unit
+) {
     val pet = DataSource.getPetById(petId) ?: return
 
     LazyColumn {

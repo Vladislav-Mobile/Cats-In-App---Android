@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.example.catsinapp.data.model.Pet
 
 @Composable
-fun StarPetCard(pet: Pet, onClick: () -> Unit) {
+fun StarPetCardLarge(pet: Pet, onClick: () -> Unit) {
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth().padding(16.dp),

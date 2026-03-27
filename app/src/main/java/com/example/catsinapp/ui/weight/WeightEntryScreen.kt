@@ -13,7 +13,9 @@ enum class ActivityLevel(val label: String) {
 }
 
 @Composable
-fun WeightEntryScreen(navController: NavController) {
+fun WeightEntryScreen(
+    onBack: () -> Unit
+){
     var selectedUnit by remember { mutableStateOf("KG") }
     var selectedActivity by remember { mutableStateOf(ActivityLevel.LOW) }
 
