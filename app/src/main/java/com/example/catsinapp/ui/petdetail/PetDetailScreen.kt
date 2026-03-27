@@ -10,6 +10,7 @@ import com.example.catsinapp.ui.components.BlockB
 import com.example.catsinapp.ui.components.BlockC
 import com.example.catsinapp.ui.components.BlockD
 import com.example.catsinapp.ui.components.CtaButton
+import com.example.catsinapp.ui.components.CtaButton
 import com.example.catsinapp.ui.components.PetHeroSection
 import com.example.catsinapp.ui.components.PetInfoChips
 

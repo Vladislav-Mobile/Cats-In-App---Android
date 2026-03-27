@@ -22,6 +22,7 @@ private val LightColorScheme = lightColorScheme(
 fun CatsInAppTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = LightColorScheme,
+        typography  = Typography,
         content     = content
     )
 }
