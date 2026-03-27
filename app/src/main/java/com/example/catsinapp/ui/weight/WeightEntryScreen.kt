@@ -1,5 +1,6 @@
 package com.example.catsinapp.ui.weight
 
+import androidx.navigation.NavController
 import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.*
@@ -12,7 +13,7 @@ enum class ActivityLevel(val label: String) {
 }
 
 @Composable
-fun WeightEntryScreen(onBack: () -> Boolean) {
+fun WeightEntryScreen(navController: NavController) {
     var selectedUnit by remember { mutableStateOf("KG") }
     var selectedActivity by remember { mutableStateOf(ActivityLevel.LOW) }
 
