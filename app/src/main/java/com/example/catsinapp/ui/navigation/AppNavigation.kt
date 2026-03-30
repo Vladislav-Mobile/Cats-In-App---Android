@@ -82,7 +82,7 @@ fun AppNavigation() {
                                 selectedTextColor   = GreenDark,
                                 unselectedIconColor = TextSecondary,
                                 unselectedTextColor = TextSecondary,
-                                indicatorColor      = Color(0xFFD4EDAA)  // светло-зелёная плашка
+                                indicatorColor      = Color(0xFFD4EDAA)
                             )
                         )
                     }
@@ -95,21 +95,32 @@ fun AppNavigation() {
             startDestination = Screen.Home.route,
             modifier         = Modifier.padding(padding)
         ) {
+
+            // ✅ FIX 1: правильный вызов HomeScreen
             composable(Screen.Home.route) {
-                HomeScreen(onPetClick = { navController.navigate(Screen.PetDetail.createRoute(it)) })
+                HomeScreen(navController)
             }
+
             composable(Screen.Care.route)    { CareScreen() }
             composable(Screen.History.route) { HistoryScreen() }
+
             composable(Screen.Profile.route) {
                 ProfileScreen(navController = navController)
             }
+
             composable(Screen.Store.route) {
                 StoreScreenPlaceholder()
             }
+
+            // ✅ FIX 2: route (НЕ createRoute)
             composable(Screen.PetDetail.route) { back ->
                 val petId = back.arguments?.getString("petId") ?: return@composable
-                PetDetailScreen(petId = petId, onBack = { navController.popBackStack() })
+                PetDetailScreen(
+                    petId = petId,
+                    onBack = { navController.popBackStack() }
+                )
             }
+
             composable(Screen.WeightEntry.route) {
                 WeightEntryScreen(onBack = { navController.popBackStack() })
             }
