@@ -10,6 +10,7 @@ enum class PetBadge(val label: String) {
     HYPER_ACTIVE("Hyper"),
     TOP_CLIMBER("Top climber"),
     CLIMBER_SPECIALIST("Climber"),
-
-    FRIENDLY("Friendly")
+    FRIENDLY("Friendly"),
+    ONE_YEAR_OLD("1 Year Old"),
+    GRACEFUL("Graceful")
 }

@@ -1,9 +1,23 @@
 package com.example.catsinapp.ui.components
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -13,20 +27,30 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.example.catsinapp.R
 import com.example.catsinapp.data.model.Pet
 import com.example.catsinapp.data.model.PetBadge
-import com.example.catsinapp.ui.theme.*
+import com.example.catsinapp.ui.theme.GreenDark
+import com.example.catsinapp.ui.theme.GreenLight
+import com.example.catsinapp.ui.theme.GreenPale
+import com.example.catsinapp.ui.theme.GreenPaleBg
+import com.example.catsinapp.ui.theme.TextPrimary
+import com.example.catsinapp.ui.theme.TextSecondary
 
 // ─────────────────────────────────────────────────────────
 // HOME HEADER
 // ─────────────────────────────────────────────────────────
 @Composable
 fun HomeHeader(onYouTubeClick: () -> Unit = {}) {
+    val context = LocalContext.current
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -34,33 +58,27 @@ fun HomeHeader(onYouTubeClick: () -> Unit = {}) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Row(
-                modifier = Modifier
-                    .background(Color(0xFF1C1C1C), RoundedCornerShape(50.dp))
-                    .padding(horizontal = 10.dp, vertical = 5.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Text(
-                    text       = "Profile views",
-                    color      = Color.White,
-                    fontSize   = 12.sp,
-                    fontWeight = FontWeight.Normal
-                )
-                Box(
-                    modifier = Modifier
-                        .background(GreenDark, RoundedCornerShape(50.dp))
-                        .padding(horizontal = 8.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text       = "120,826",
-                        color      = Color.White,
-                        fontSize   = 12.sp,
-                        fontWeight = FontWeight.Bold
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+
+            // GitHub profile views — живой счётчик
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(
+                        "https://komarev.com/ghpvc/" +
+                                "?username=vladislav-mobile" +
+                                "&style=flat-square" +
+                                "&color=brightgreen" +
+                                "&label=Profile+views"
                     )
-                }
-            }
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "Profile views",
+                modifier = Modifier
+                    .height(22.dp)
+                    .widthIn(min = 140.dp, max = 240.dp),
+                contentScale = ContentScale.Fit
+            )
+
             Text(
                 text       = "Mobile app from Vlad Kazachek",
                 fontSize   = 15.sp,
@@ -69,16 +87,23 @@ fun HomeHeader(onYouTubeClick: () -> Unit = {}) {
             )
         }
 
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color(0xFFFF0000))
-                .clickable { onYouTubeClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(text = "▶", color = Color.White, fontSize = 14.sp)
-        }
+        // YouTube кнопка — стандартная иконка
+        Icon(
+            painter            = painterResource(id = R.drawable.ic_youtube),
+            contentDescription = "YouTube",
+            tint               = Color.Unspecified,
+            modifier           = Modifier
+                .width(44.dp)
+                .height(30.dp)
+                .clickable {
+                    val intent = Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://www.youtube.com/@QAMobileinternational")
+                    )
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(intent)
+                }
+        )
     }
 }
 
@@ -137,6 +162,23 @@ fun PetBadgeChip(badge: PetBadge) {
 }
 
 // ─────────────────────────────────────────────────────────
+// ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ — локальное фото кота
+// ─────────────────────────────────────────────────────────
+@Composable
+private fun PetImage(
+    imageRes: Int,
+    name: String,
+    modifier: Modifier
+) {
+    Image(
+        painter            = painterResource(id = imageRes),
+        contentDescription = name,
+        contentScale       = ContentScale.Crop,
+        modifier           = modifier
+    )
+}
+
+// ─────────────────────────────────────────────────────────
 // STAR PET CARD — большая карточка Stars of the Week
 // ─────────────────────────────────────────────────────────
 @Composable
@@ -149,15 +191,12 @@ fun StarPetCard(pet: Pet, onClick: () -> Unit) {
             .clip(RoundedCornerShape(20.dp))
             .clickable { onClick() }
     ) {
-        AsyncImage(
-            model              = pet.imageRes,
-            contentDescription = pet.name,
-            contentScale       = ContentScale.Crop,
-            modifier           = Modifier
+        PetImage(
+            imageRes = pet.imageRes,
+            name     = pet.name,
+            modifier = Modifier
                 .fillMaxWidth()
-                .height(220.dp),
-            placeholder        = painterResource(pet.imageRes),
-            error              = painterResource(pet.imageRes)
+                .height(220.dp)
         )
 
         // Тёмный градиент снизу
@@ -209,9 +248,9 @@ fun StarPetCard(pet: Pet, onClick: () -> Unit) {
 @Composable
 fun MiniPetCard(pet: Pet, onClick: () -> Unit) {
     val statusLabel = when {
-        pet.secondChip?.value != null -> pet.secondChip.value.uppercase()
-        pet.tags.any { it.contains("kitten", true) } -> "KITTEN"
-        else -> "ADULT"
+        pet.secondChip?.value != null                    -> pet.secondChip.value.uppercase()
+        pet.tags.any { it.contains("kitten", true) }    -> "KITTEN"
+        else                                             -> "ADULT"
     }
 
     Column(
@@ -222,15 +261,12 @@ fun MiniPetCard(pet: Pet, onClick: () -> Unit) {
             .background(Color.White)
             .clickable { onClick() }
     ) {
-        AsyncImage(
-            model              = pet.imageRes,
-            contentDescription = pet.name,
-            contentScale       = ContentScale.Crop,
-            modifier           = Modifier
+        PetImage(
+            imageRes = pet.imageRes,
+            name     = pet.name,
+            modifier = Modifier
                 .fillMaxWidth()
-                .height(100.dp),
-            placeholder        = painterResource(pet.imageRes),
-            error              = painterResource(pet.imageRes)
+                .height(100.dp)
         )
         Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
             Text(
@@ -250,7 +286,7 @@ fun MiniPetCard(pet: Pet, onClick: () -> Unit) {
 }
 
 // ─────────────────────────────────────────────────────────
-// GRID PET CARD — Active Cats, стандартная 2-колонная
+// GRID PET CARD — Active Cats, 2-колонная сетка
 // ─────────────────────────────────────────────────────────
 @Composable
 fun GridPetCard(pet: Pet, onClick: () -> Unit) {
@@ -261,16 +297,13 @@ fun GridPetCard(pet: Pet, onClick: () -> Unit) {
             .clickable { onClick() }
             .padding(bottom = 10.dp)
     ) {
-        AsyncImage(
-            model              = pet.imageRes,
-            contentDescription = pet.name,
-            contentScale       = ContentScale.Crop,
-            modifier           = Modifier
+        PetImage(
+            imageRes = pet.imageRes,
+            name     = pet.name,
+            modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp)
-                .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp)),
-            placeholder        = painterResource(pet.imageRes),
-            error              = painterResource(pet.imageRes)
+                .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
         )
         Spacer(Modifier.height(8.dp))
         Text(
@@ -290,7 +323,6 @@ fun GridPetCard(pet: Pet, onClick: () -> Unit) {
                 lineHeight = 14.sp
             )
         }
-        // Специальный тег снизу
         val tag = pet.badges.firstOrNull {
             it == PetBadge.MARATHON_SPIRIT || it == PetBadge.HYPER_ACTIVE ||
                     it == PetBadge.CLIMBER_SPECIALIST || it == PetBadge.TOP_CLIMBER
@@ -320,18 +352,15 @@ fun FeaturedPetCard(pet: Pet, onClick: () -> Unit) {
             .background(Color(0xFFFAEDE8))
             .clickable { onClick() }
             .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        AsyncImage(
-            model              = pet.imageRes,
-            contentDescription = pet.name,
-            contentScale       = ContentScale.Crop,
-            modifier           = Modifier
+        PetImage(
+            imageRes = pet.imageRes,
+            name     = pet.name,
+            modifier = Modifier
                 .size(80.dp)
-                .clip(RoundedCornerShape(14.dp)),
-            placeholder        = painterResource(pet.imageRes),
-            error              = painterResource(pet.imageRes)
+                .clip(RoundedCornerShape(14.dp))
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(

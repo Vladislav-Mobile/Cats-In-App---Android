@@ -1,2 +1,32 @@
 package com.example.catsinapp.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.example.catsinapp.data.model.Pet
+
+@Composable
+fun PetCard(
+    pet: Pet,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+            .height(120.dp)
+            .background(Color.LightGray, RoundedCornerShape(12.dp))
+            .clickable { onClick() }
+    ) {
+        Text(
+            text = pet.name,
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}

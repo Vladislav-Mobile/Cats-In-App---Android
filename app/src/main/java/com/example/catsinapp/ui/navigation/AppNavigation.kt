@@ -1,9 +1,11 @@
 package com.example.catsinapp.ui.navigation
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -22,7 +24,6 @@ import com.example.catsinapp.ui.profile.ProfileScreen
 import com.example.catsinapp.ui.theme.GreenDark
 import com.example.catsinapp.ui.theme.TextSecondary
 import com.example.catsinapp.ui.weight.WeightEntryScreen
-import androidx.compose.foundation.layout.fillMaxSize
 
 private data class NavItem(
     val screen: Screen,
@@ -61,7 +62,7 @@ fun AppNavigation() {
 
                         NavigationBarItem(
                             selected = selected,
-                            onClick  = {
+                            onClick = {
                                 navController.navigate(item.screen.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         saveState = true
@@ -70,7 +71,7 @@ fun AppNavigation() {
                                     restoreState    = true
                                 }
                             },
-                            icon  = {
+                            icon = {
                                 Icon(
                                     painter            = painterResource(item.iconRes),
                                     contentDescription = item.label
@@ -95,14 +96,20 @@ fun AppNavigation() {
             startDestination = Screen.Home.route,
             modifier         = Modifier.padding(padding)
         ) {
-
-            // ✅ FIX 1: правильный вызов HomeScreen
+            // ✅ ИСПРАВЛЕНО: HomeScreen принимает onPetClick, а не NavController
             composable(Screen.Home.route) {
-                HomeScreen(navController)
+                HomeScreen(onPetClick = { petId ->
+                    navController.navigate(Screen.PetDetail.createRoute(petId))
+                })
             }
 
-            composable(Screen.Care.route)    { CareScreen() }
-            composable(Screen.History.route) { HistoryScreen() }
+            composable(Screen.Care.route) {
+                CareScreen()
+            }
+
+            composable(Screen.History.route) {
+                HistoryScreen()
+            }
 
             composable(Screen.Profile.route) {
                 ProfileScreen(navController = navController)
@@ -112,11 +119,10 @@ fun AppNavigation() {
                 StoreScreenPlaceholder()
             }
 
-            // ✅ FIX 2: route (НЕ createRoute)
             composable(Screen.PetDetail.route) { back ->
                 val petId = back.arguments?.getString("petId") ?: return@composable
                 PetDetailScreen(
-                    petId = petId,
+                    petId  = petId,
                     onBack = { navController.popBackStack() }
                 )
             }
@@ -131,8 +137,8 @@ fun AppNavigation() {
 @Composable
 private fun StoreScreenPlaceholder() {
     androidx.compose.foundation.layout.Box(
-        modifier = androidx.compose.ui.Modifier.fillMaxSize(),
-        contentAlignment = androidx.compose.ui.Alignment.Center
+        modifier          = Modifier.fillMaxSize(),
+        contentAlignment  = Alignment.Center
     ) {
         Text("Store — Coming soon")
     }
