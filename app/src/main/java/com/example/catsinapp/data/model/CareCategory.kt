@@ -5,14 +5,14 @@ data class CareCategory(
     val title: String,
     val iconRes: Int,
     val description: String,
-    val imageRes: Int? = null,
+    val imageRes: Int? = null,       // фото внизу bottom sheet (nullable)
     val extraBlock: CareExtraBlock? = null
 )
 
 sealed class CareExtraBlock {
-
     data class Table(
         val title: String,
+        val hasHeader: Boolean = false,
         val rows: List<TableRow>
     ) : CareExtraBlock()
 
@@ -22,13 +22,13 @@ sealed class CareExtraBlock {
 }
 
 data class TableRow(
-    val title: String,
-    val subtitle: String?,
+    val label: String,
+    val middle: String? = null,
     val value: String
 )
 
 data class NumberedItem(
     val number: Int,
     val title: String,
-    val description: String
+    val text: String
 )

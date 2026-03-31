@@ -1,13 +1,5 @@
 package com.example.catsinapp.data.model
 
-enum class MealType {
-    BREAKFAST,
-    MORNING_TREAT,
-    LUNCH,
-    DINNER,
-    SNACK
-}
-
 data class FeedingLog(
     val id: String,
     val type: MealType,
@@ -15,3 +7,11 @@ data class FeedingLog(
     val amount: String,
     val time: String
 )
+
+enum class MealType(val label: String) {
+    BREAKFAST("Breakfast"),
+    MORNING_TREAT("Morning Treat"),
+    LUNCH("Lunch"),
+    DINNER("Dinner"),
+    SNACK("Snack")
+}

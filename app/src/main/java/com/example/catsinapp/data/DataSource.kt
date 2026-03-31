@@ -2,6 +2,9 @@ package com.example.catsinapp.data
 
 import com.example.catsinapp.R
 import com.example.catsinapp.data.model.*
+import com.example.catsinapp.data.model.CareExtraBlock
+import com.example.catsinapp.data.model.TableRow
+import com.example.catsinapp.data.model.NumberedItem
 
 object DataSource {
 
@@ -335,5 +338,123 @@ object DataSource {
 
     fun getPetProfile(): PetProfile? = null
 
-    fun getCareCategories(): List<CareCategory> = emptyList()
+    fun getCareCategories(): List<CareCategory> = listOf(
+
+        CareCategory(
+            id          = "walks",
+            title       = "Walks",
+            iconRes     = R.drawable.ic_care_walks,
+            description = "Regular physical activity is essential for maintaining your pet's physical and mental health. Without enough exercise, pets may develop anxiety, excess energy, or weight issues.\n\nDaily walks support heart health, strengthen joints, and provide mental stimulation through new environments and scents. The ideal duration depends on your pet's size and energy level.\n\nMaintain a consistent routine and adjust intensity based on your pet's condition.",
+            extraBlock  = CareExtraBlock.Table(
+                title = "Daily Duration Guide",
+                rows  = listOf(
+                    TableRow("Small Breeds",  null, "20–30 min"),
+                    TableRow("Medium Breeds", null, "45–60 min"),
+                    TableRow("Large Breeds",  null, "60–90 min")
+                )
+            )
+        ),
+
+        CareCategory(
+            id          = "care",
+            title       = "Care",
+            iconRes     = R.drawable.ic_care_care,
+            description = "Regular grooming supports healthy skin and coat while reducing shedding and tangles.\n\nAdjust grooming frequency based on coat type. Use proper tools and be gentle to avoid discomfort.\n\nWatch for any unusual changes in the skin or fur, as they may indicate health issues."
+        ),
+
+        CareCategory(
+            id          = "food",
+            title       = "Food",
+            iconRes     = R.drawable.ic_care_food,
+            description = "Regular physical activity is essential for maintaining your pet's physical and mental health. Without enough exercise, pets may develop anxiety, excess energy, or weight issues.\n\nDaily walks support heart health, strengthen joints, and provide mental stimulation through new environments and scents. The ideal duration depends on your pet's size and energy level.\n\nMaintain a consistent routine and adjust intensity based on your pet's condition.",
+            extraBlock  = CareExtraBlock.Table(
+                title     = "",
+                hasHeader = true,
+                rows      = listOf(
+                    TableRow("Dry Kibble",   "Twice Daily",  "50g"),
+                    TableRow("Wet Topper",  "Evening Only", "60g"),
+                    TableRow("Dental Chew", "Post-Walk",    "1 Stick")
+                )
+            )
+        ),
+
+        CareCategory(
+            id          = "health",
+            title       = "Health",
+            iconRes     = R.drawable.ic_care_health,
+            description = "Pets cannot communicate discomfort directly, so it's important to monitor changes in their behavior and condition. Watch for shifts in appetite, energy levels, breathing, or water intake. Tracking these regularly helps detect potential issues early.",
+            extraBlock  = CareExtraBlock.NumberedList(
+                items = listOf(
+                    NumberedItem(1, "Basic Care",       "A healthy cat needs good food, clean water, and regular vet check-ups."),
+                    NumberedItem(2, "Signs of Illness", "Watch for behavior changes: low energy, loss of appetite, hiding, or unusual affection. Vomiting or discharge are also warning signs."),
+                    NumberedItem(3, "Nutrition",        "Poor food can cause serious health issues."),
+                    NumberedItem(4, "Water",            "Cats often drink too little. Use fountains, wet food, or add water to meals to support kidney health."),
+                    NumberedItem(5, "Activity",         "Daily play (10–15 minutes) helps prevent obesity, diabetes, and joint problems.")
+                )
+            )
+        ),
+
+        CareCategory(
+            id          = "veterinarians",
+            title       = "Veterinarians",
+            iconRes     = R.drawable.ic_care_vet,
+            description = "Regular veterinary visits help detect health issues early, even before visible symptoms appear.\n\nFollow vaccination schedules and routine check-ups. Younger and older pets may require more frequent visits. Discuss any changes in behavior or diet with your vet.\n\nPreventive care is more effective and less stressful than treating advanced conditions."
+        ),
+
+        CareCategory(
+            id          = "toys",
+            title       = "Toys",
+            iconRes     = R.drawable.ic_care_toys,
+            description = "Toys are important for both physical activity and mental stimulation.\n\nProvide a variety of toys to prevent boredom and rotate them regularly to maintain interest. Choose safe, durable options suitable for your pet's size.\n\nAvoid damaged toys, as they may become a safety risk.",
+            imageRes    = R.drawable.img_care_toys
+        ),
+
+        CareCategory(
+            id          = "space",
+            title       = "Space",
+            iconRes     = R.drawable.ic_care_space,
+            description = "A safe and organized environment helps your pet feel secure and prevents accidents.\n\nRemove hazards such as loose wires, toxic plants, or small objects that can be swallowed. Keep important items out of reach.\n\nCreate a dedicated space where your pet can relax and feel comfortable.",
+            imageRes    = R.drawable.img_care_space
+        ),
+
+        CareCategory(
+            id          = "grooming",
+            title       = "Grooming",
+            iconRes     = R.drawable.ic_care_grooming,
+            description = "Regular grooming supports healthy skin and coat while reducing shedding and tangles.\n\nAdjust grooming frequency based on coat type. Use proper tools and be gentle to avoid discomfort.\n\nWatch for any unusual changes in the skin or fur, as they may indicate health issues.",
+            imageRes    = R.drawable.img_care_grooming
+        ),
+
+        CareCategory(
+            id          = "bathing",
+            title       = "Bathing",
+            iconRes     = R.drawable.ic_care_bathing,
+            description = "Bathing helps keep your pet's skin and coat clean, but it should be done carefully to avoid stress or irritation.\n\nUse lukewarm water and pet-safe shampoo. Avoid washing too frequently, as it can dry out the skin. Always protect the eyes and ears during the process.\n\nDry your pet thoroughly and reward them afterward to create a calm, positive experience.",
+            imageRes    = R.drawable.img_care_bathing
+        ),
+
+        CareCategory(
+            id          = "vaccination",
+            title       = "Vaccination",
+            iconRes     = R.drawable.ic_care_vaccination,
+            description = "Regular veterinary visits are key to preventive care and early diagnosis.\n\nSchedule routine check-ups and discuss any concerns about behavior, diet, or health. Early detection helps avoid serious complications.\n\nBuilding a relationship with a trusted veterinarian ensures better long-term care for your pet.",
+            imageRes    = R.drawable.img_care_vaccination
+        ),
+
+        CareCategory(
+            id          = "sleep",
+            title       = "Sleap",
+            iconRes     = R.drawable.ic_care_sleep,
+            description = "Quality sleep is essential for your pet's recovery, mood, and overall health.\n\nEnsure your pet has a quiet, comfortable place to rest. Avoid disturbing them during sleep, especially after active periods.\n\nChanges in sleep patterns may indicate stress or health concerns and should be monitored.",
+            imageRes    = R.drawable.img_care_sleep
+        ),
+
+        CareCategory(
+            id          = "game",
+            title       = "Game",
+            iconRes     = R.drawable.ic_care_game,
+            description = "Play is a key part of your pet's daily routine. It helps release energy, prevent boredom, and improve behavior.\n\nUse a mix of physical and mental games to keep your pet engaged. Short, regular sessions are more effective than occasional long ones.\n\nInteractive play also strengthens your bond and builds trust.",
+            imageRes    = R.drawable.img_care_game
+        )
+    )
 }
