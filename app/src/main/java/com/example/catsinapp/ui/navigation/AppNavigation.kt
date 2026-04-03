@@ -1,11 +1,9 @@
 package com.example.catsinapp.ui.navigation
 
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -21,6 +19,7 @@ import com.example.catsinapp.ui.history.HistoryScreen
 import com.example.catsinapp.ui.home.HomeScreen
 import com.example.catsinapp.ui.petdetail.PetDetailScreen
 import com.example.catsinapp.ui.profile.ProfileScreen
+import com.example.catsinapp.ui.store.StoreScreen
 import com.example.catsinapp.ui.theme.GreenDark
 import com.example.catsinapp.ui.theme.TextSecondary
 import com.example.catsinapp.ui.weight.WeightEntryScreen
@@ -44,8 +43,8 @@ fun AppNavigation() {
     )
 
     val noBottomBarRoutes = listOf(Screen.PetDetail.route, Screen.WeightEntry.route)
-    val backStack by navController.currentBackStackEntryAsState()
-    val currentRoute = backStack?.destination?.route
+    val backStack    by navController.currentBackStackEntryAsState()
+    val currentRoute  = backStack?.destination?.route
     val showBottomBar = currentRoute !in noBottomBarRoutes
 
     Scaffold(
@@ -62,7 +61,7 @@ fun AppNavigation() {
 
                         NavigationBarItem(
                             selected = selected,
-                            onClick = {
+                            onClick  = {
                                 navController.navigate(item.screen.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         saveState = true
@@ -71,7 +70,7 @@ fun AppNavigation() {
                                     restoreState    = true
                                 }
                             },
-                            icon = {
+                            icon  = {
                                 Icon(
                                     painter            = painterResource(item.iconRes),
                                     contentDescription = item.label
@@ -96,50 +95,26 @@ fun AppNavigation() {
             startDestination = Screen.Home.route,
             modifier         = Modifier.padding(padding)
         ) {
-            // ✅ ИСПРАВЛЕНО: HomeScreen принимает onPetClick, а не NavController
             composable(Screen.Home.route) {
                 HomeScreen(onPetClick = { petId ->
                     navController.navigate(Screen.PetDetail.createRoute(petId))
                 })
             }
-
-            composable(Screen.Care.route) {
-                CareScreen()
-            }
-
-            composable(Screen.History.route) {
-                HistoryScreen()
-            }
-
+            composable(Screen.Care.route)    { CareScreen() }
+            composable(Screen.History.route) { HistoryScreen() }
             composable(Screen.Profile.route) {
                 ProfileScreen(navController = navController)
             }
-
-            composable(Screen.Store.route) {
-                StoreScreenPlaceholder()
-            }
+            // ✅ StoreScreen из ui/store/StoreScreen.kt
+            composable(Screen.Store.route)   { StoreScreen() }
 
             composable(Screen.PetDetail.route) { back ->
                 val petId = back.arguments?.getString("petId") ?: return@composable
-                PetDetailScreen(
-                    petId  = petId,
-                    onBack = { navController.popBackStack() }
-                )
+                PetDetailScreen(petId = petId, onBack = { navController.popBackStack() })
             }
-
             composable(Screen.WeightEntry.route) {
                 WeightEntryScreen(onBack = { navController.popBackStack() })
             }
         }
-    }
-}
-
-@Composable
-private fun StoreScreenPlaceholder() {
-    androidx.compose.foundation.layout.Box(
-        modifier          = Modifier.fillMaxSize(),
-        contentAlignment  = Alignment.Center
-    ) {
-        Text("Store — Coming soon")
     }
 }
