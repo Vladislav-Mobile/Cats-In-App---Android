@@ -1,10 +1,10 @@
 package com.example.catsinapp.data.model
 
 data class FeedingLog(
-    val id: String,
+    val id: Int,
     val type: MealType,
     val food: String,
-    val amount: String,
+    val amount: Int,
     val time: String
 )
 
