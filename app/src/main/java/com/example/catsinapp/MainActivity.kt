@@ -8,6 +8,7 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.catsinapp.data.FeedingLogRepository
 import com.example.catsinapp.data.network.CatFactsRepository
+import com.example.catsinapp.data.network.GitHubRepository
 import com.example.catsinapp.debug.AppLogger
 import com.example.catsinapp.debug.DevMenuDialog
 import com.example.catsinapp.debug.ShakeDetector
@@ -29,10 +30,13 @@ class MainActivity : ComponentActivity() {
         // Загружаем данные кормления из Room
         FeedingLogRepository.init(this)
 
-        // Сетевой запрос при старте — виден в Network Inspector
-        // (не ждём результата, просто пинг для инспектора)
+        // Сетевые запросы при старте — видны в Network Inspector.
+        // Внимание: WebView-трафик (браузер, YouTube) там не отображается —
+        // WebView использует Chromium, а не OkHttp.
         lifecycleScope.launch {
-            CatFactsRepository.fetchFact()
+            CatFactsRepository.fetchFact()        // GET catfact.ninja
+            GitHubRepository.fetchRepoStats()     // GET api.github.com/repos/...
+            GitHubRepository.fetchBranches()      // GET api.github.com/repos/.../branches
         }
 
         setContent {

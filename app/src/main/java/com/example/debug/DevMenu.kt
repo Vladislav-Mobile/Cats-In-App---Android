@@ -14,11 +14,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import android.content.Intent
+import androidx.core.content.FileProvider
 import com.example.catsinapp.data.network.CatFactsRepository
+import com.example.catsinapp.data.network.GitHubRepository
 import com.example.catsinapp.data.db.AppDatabase
 import com.example.catsinapp.data.db.FeedingLogEntity
 import com.example.catsinapp.data.db.PetProfileEntity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import java.time.LocalDate
 
 private val GreenDark = Color(0xFF2D5016)
@@ -47,10 +53,54 @@ fun DevMenuDialog(visible: Boolean, onDismiss: () -> Unit) {
             HorizontalDivider(color = Color(0xFFEEEEEE))
 
             // ── Network Inspector ──────────────────────────────────────────────
-            // Кнопка отправляет OkHttp-запрос прямо сейчас —
-            // открой Network Inspector и нажми кнопку, чтобы увидеть трафик
-            DevMenuButton(label = "🌐 Ping Network (для Network Inspector)") {
-                scope.launch { CatFactsRepository.fetchFact() }
+            // Отправляет 3 OkHttp-запроса сразу — catfact.ninja + GitHub API x2.
+            // ⚠️ WebView-трафик (YouTube, Wikipedia) в Network Inspector НЕ виден:
+            // WebView использует Chromium, а не OkHttp — это ограничение Android Studio.
+            DevMenuButton(label = "🌐 Ping Network × 3 (для Network Inspector)") {
+                scope.launch {
+                    CatFactsRepository.fetchFact()        // GET catfact.ninja/fact
+                    GitHubRepository.fetchRepoStats()     // GET api.github.com/repos/...
+                    GitHubRepository.fetchBranches()      // GET api.github.com/repos/.../branches
+                }
+                onDismiss()
+            }
+
+            // ── Export DB ─────────────────────────────────────────────────────
+            // Экспортирует файл .db через стандартный Android share-диалог.
+            // Можно сохранить на ПК, в Google Drive, Telegram и т.д.
+            // Для импорта: замени файл вручную через Device Explorer в Android Studio.
+            DevMenuButton(label = "📤 Экспорт БД (поделиться .db файлом)") {
+                scope.launch {
+                    withContext(Dispatchers.IO) {
+                        try {
+                            val db = AppDatabase.getInstance(context)
+                            // Checkpoint WAL перед копированием
+                            db.openHelper.writableDatabase
+                                .execSQL("PRAGMA wal_checkpoint(FULL)")
+                            val src  = context.getDatabasePath("cats_app_db")
+                            val dest = File(context.cacheDir, "cats_app_db_export.db")
+                            src.copyTo(dest, overwrite = true)
+                            val uri = FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.fileprovider",
+                                dest
+                            )
+                            withContext(Dispatchers.Main) {
+                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "application/octet-stream"
+                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                    putExtra(Intent.EXTRA_SUBJECT, "cats_app_db.db")
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                context.startActivity(
+                                    Intent.createChooser(intent, "Экспорт базы данных")
+                                )
+                            }
+                        } catch (e: Exception) {
+                            AppLogger.jsonLoadError(prefs = "db_export", error = e)
+                        }
+                    }
+                }
                 onDismiss()
             }
 
