@@ -14,6 +14,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.time.LocalDate
 
 object FeedingLogRepository {
 
@@ -37,9 +38,18 @@ object FeedingLogRepository {
         scope.launch {
             val dao = AppDatabase.getInstance(context).feedingLogDao()
 
-            // Если Room пустой — мигрируем данные из SharedPreferences (один раз)
+            // Если Room пустой — пробуем мигрировать или засеваем тестовыми данными
             if (dao.totalCount() == 0) {
-                migrateFromPrefs(context, dao)
+                val hasPrefs = context
+                    .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                    .getString(KEY, null) != null
+                if (hasPrefs) {
+                    migrateFromPrefs(context, dao)
+                } else {
+                    // Первый запуск без старых данных — засеваем демо-записи
+                    // чтобы Database Inspector сразу показал данные
+                    seedDemoData(dao)
+                }
             }
 
             // Загружаем всё из Room в StateMap (виден в Database Inspector)
@@ -95,6 +105,27 @@ object FeedingLogRepository {
     }
 
     fun observeDate(context: Context, dateKey: String) { /* данные уже в StateMap */ }
+
+    // ── Демо-данные (только при первом запуске без старых данных) ────────────
+
+    private suspend fun seedDemoData(dao: FeedingLogDao) {
+        val today     = LocalDate.now().toString()
+        val yesterday = LocalDate.now().minusDays(1).toString()
+        val twoDays   = LocalDate.now().minusDays(2).toString()
+
+        listOf(
+            FeedingLogEntity(id = 1001, dateKey = today,     type = "BREAKFAST", food = "Whiskas курица",   amount = 80,  time = "08:00"),
+            FeedingLogEntity(id = 1002, dateKey = today,     type = "LUNCH",     food = "Felix суп",        amount = 40,  time = "13:00"),
+            FeedingLogEntity(id = 1003, dateKey = today,     type = "DINNER",    food = "Sheba паштет",     amount = 85,  time = "19:30"),
+            FeedingLogEntity(id = 1004, dateKey = yesterday, type = "BREAKFAST", food = "Whiskas рыба",     amount = 75,  time = "08:30"),
+            FeedingLogEntity(id = 1005, dateKey = yesterday, type = "SNACK",     food = "Лакомство Dreamies", amount = 10, time = "15:00"),
+            FeedingLogEntity(id = 1006, dateKey = yesterday, type = "DINNER",    food = "Felix говядина",   amount = 80,  time = "19:00"),
+            FeedingLogEntity(id = 1007, dateKey = twoDays,   type = "BREAKFAST", food = "Whiskas ягнёнок",  amount = 80,  time = "09:00"),
+            FeedingLogEntity(id = 1008, dateKey = twoDays,   type = "DINNER",    food = "Purina One",       amount = 90,  time = "20:00")
+        ).forEach { dao.insertLog(it) }
+
+        AppLogger.feedingLogsLoaded(totalDates = 3, totalLogs = 8)
+    }
 
     // ── Миграция SharedPreferences → Room (выполняется один раз) ─────────────
 

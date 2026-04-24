@@ -5,12 +5,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.lifecycleScope
 import com.example.catsinapp.data.FeedingLogRepository
+import com.example.catsinapp.data.network.CatFactsRepository
 import com.example.catsinapp.debug.AppLogger
 import com.example.catsinapp.debug.DevMenuDialog
 import com.example.catsinapp.debug.ShakeDetector
 import com.example.catsinapp.ui.navigation.AppNavigation
 import com.example.catsinapp.ui.theme.CatsInAppTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -23,8 +26,14 @@ class MainActivity : ComponentActivity() {
 
         AppLogger.activityCreated("MainActivity")
 
-        // Загружаем данные кормления из SharedPreferences
+        // Загружаем данные кормления из Room
         FeedingLogRepository.init(this)
+
+        // Сетевой запрос при старте — виден в Network Inspector
+        // (не ждём результата, просто пинг для инспектора)
+        lifecycleScope.launch {
+            CatFactsRepository.fetchFact()
+        }
 
         setContent {
             CatsInAppTheme {

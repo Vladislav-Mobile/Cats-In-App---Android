@@ -4,6 +4,7 @@ import android.app.Application
 import coil.Coil
 import coil.ImageLoader
 import coil.decode.SvgDecoder
+import com.example.catsinapp.data.PetProfileRepository
 import com.example.catsinapp.data.db.AppDatabase
 
 
@@ -13,6 +14,10 @@ class CatsInApp : Application() {
 
         // Инициализируем Room при старте — виден в Database Inspector
         AppDatabase.getInstance(this)
+
+        // Загружаем профиль: если таблица пустая — сохраняем дефолтные данные
+        // чтобы строка сразу появилась в Database Inspector
+        PetProfileRepository.getProfile(this)
 
         // Настраиваем Coil с поддержкой SVG
         Coil.setImageLoader(
