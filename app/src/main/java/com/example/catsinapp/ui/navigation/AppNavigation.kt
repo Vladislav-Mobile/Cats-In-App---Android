@@ -2,8 +2,7 @@ package com.example.catsinapp.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -14,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.catsinapp.R
+import com.example.catsinapp.debug.AppLogger
 import com.example.catsinapp.ui.care.CareScreen
 import com.example.catsinapp.ui.history.HistoryScreen
 import com.example.catsinapp.ui.home.HomeScreen
@@ -24,11 +24,7 @@ import com.example.catsinapp.ui.theme.GreenDark
 import com.example.catsinapp.ui.theme.TextSecondary
 import com.example.catsinapp.ui.weight.WeightEntryScreen
 
-private data class NavItem(
-    val screen: Screen,
-    val label: String,
-    val iconRes: Int
-)
+private data class NavItem(val screen: Screen, val label: String, val iconRes: Int)
 
 @Composable
 fun AppNavigation() {
@@ -47,18 +43,19 @@ fun AppNavigation() {
     val currentRoute  = backStack?.destination?.route
     val showBottomBar = currentRoute !in noBottomBarRoutes
 
+    LaunchedEffect(currentRoute) {
+        currentRoute?.let { AppLogger.screenOpened(it) }
+    }
+
     Scaffold(
         containerColor = Color.White,
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar(
-                    containerColor = Color.White,
-                    tonalElevation = androidx.compose.ui.unit.Dp(0f)
-                ) {
+                NavigationBar(containerColor = Color.White,
+                    tonalElevation = androidx.compose.ui.unit.Dp(0f)) {
                     navItems.forEach { item ->
                         val selected = backStack?.destination
                             ?.hierarchy?.any { it.route == item.screen.route } == true
-
                         NavigationBarItem(
                             selected = selected,
                             onClick  = {
@@ -70,12 +67,7 @@ fun AppNavigation() {
                                     restoreState    = true
                                 }
                             },
-                            icon  = {
-                                Icon(
-                                    painter            = painterResource(item.iconRes),
-                                    contentDescription = item.label
-                                )
-                            },
+                            icon   = { Icon(painterResource(item.iconRes), item.label) },
                             label  = { Text(item.label) },
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor   = GreenDark,
@@ -90,29 +82,66 @@ fun AppNavigation() {
             }
         }
     ) { padding ->
-        NavHost(
-            navController    = navController,
-            startDestination = Screen.Home.route,
-            modifier         = Modifier.padding(padding)
-        ) {
+        NavHost(navController = navController, startDestination = Screen.Home.route,
+            modifier = Modifier.padding(padding)) {
+
             composable(Screen.Home.route) {
+                val startTime = remember { System.currentTimeMillis() }
+                LaunchedEffect(Unit) {
+                    AppLogger.screenLoadTime("HomeScreen", System.currentTimeMillis() - startTime)
+                }
                 HomeScreen(onPetClick = { petId ->
                     navController.navigate(Screen.PetDetail.createRoute(petId))
                 })
             }
-            composable(Screen.Care.route)    { CareScreen() }
-            composable(Screen.History.route) { HistoryScreen() }
+
+            composable(Screen.Care.route) {
+                val startTime = remember { System.currentTimeMillis() }
+                LaunchedEffect(Unit) {
+                    AppLogger.screenLoadTime("CareScreen", System.currentTimeMillis() - startTime)
+                }
+                CareScreen()
+            }
+
+            composable(Screen.History.route) {
+                val startTime = remember { System.currentTimeMillis() }
+                LaunchedEffect(Unit) {
+                    AppLogger.screenLoadTime("HistoryScreen", System.currentTimeMillis() - startTime)
+                }
+                HistoryScreen()
+            }
+
             composable(Screen.Profile.route) {
+                val startTime = remember { System.currentTimeMillis() }
+                LaunchedEffect(Unit) {
+                    AppLogger.screenLoadTime("ProfileScreen", System.currentTimeMillis() - startTime)
+                }
                 ProfileScreen(navController = navController)
             }
-            // ✅ StoreScreen из ui/store/StoreScreen.kt
-            composable(Screen.Store.route)   { StoreScreen() }
+
+            composable(Screen.Store.route) {
+                val startTime = remember { System.currentTimeMillis() }
+                LaunchedEffect(Unit) {
+                    AppLogger.screenLoadTime("StoreScreen", System.currentTimeMillis() - startTime)
+                }
+                StoreScreen()
+            }
 
             composable(Screen.PetDetail.route) { back ->
-                val petId = back.arguments?.getString("petId") ?: return@composable
+                val petId     = back.arguments?.getString("petId") ?: return@composable
+                val startTime = remember { System.currentTimeMillis() }
+                LaunchedEffect(Unit) {
+                    AppLogger.screenOpened("PetDetailScreen", "petId=$petId")
+                    AppLogger.screenLoadTime("PetDetailScreen", System.currentTimeMillis() - startTime)
+                }
                 PetDetailScreen(petId = petId, onBack = { navController.popBackStack() })
             }
+
             composable(Screen.WeightEntry.route) {
+                val startTime = remember { System.currentTimeMillis() }
+                LaunchedEffect(Unit) {
+                    AppLogger.screenLoadTime("WeightEntryScreen", System.currentTimeMillis() - startTime)
+                }
                 WeightEntryScreen(onBack = { navController.popBackStack() })
             }
         }

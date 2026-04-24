@@ -2,97 +2,145 @@ package com.example.catsinapp.data
 
 import android.content.Context
 import androidx.compose.runtime.mutableStateMapOf
+import com.example.catsinapp.data.db.AppDatabase
+import com.example.catsinapp.data.db.FeedingLogDao
+import com.example.catsinapp.data.db.FeedingLogEntity
 import com.example.catsinapp.data.model.FeedingLog
 import com.example.catsinapp.data.model.MealType
-import org.json.JSONArray
+import com.example.catsinapp.debug.AppLogger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 object FeedingLogRepository {
 
+    // Старые ключи SharedPreferences — нужны только для однократной миграции
     private const val PREFS = "feeding_logs"
     private const val KEY   = "logs_json"
 
-    // Map<"yyyy-MM-dd", List<FeedingLog>>
-    val logs = mutableStateMapOf<String, List<FeedingLog>>()
-
-    // Даты с записями — для точек в календаре
+    // Compose-реактивные карты — UI подписывается на них напрямую
+    val logs          = mutableStateMapOf<String, List<FeedingLog>>()
     val datesWithLogs = mutableStateMapOf<String, Boolean>()
 
     private var initialized = false
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    // ── Инициализация ─────────────────────────────────────────────────────────
 
     fun init(context: Context) {
         if (initialized) return
         initialized = true
-        loadFromPrefs(context)
+
+        scope.launch {
+            val dao = AppDatabase.getInstance(context).feedingLogDao()
+
+            // Если Room пустой — мигрируем данные из SharedPreferences (один раз)
+            if (dao.totalCount() == 0) {
+                migrateFromPrefs(context, dao)
+            }
+
+            // Загружаем всё из Room в StateMap (виден в Database Inspector)
+            val all = dao.getAllLogs()
+            withContext(Dispatchers.Main) {
+                all.forEach { entity ->
+                    val log = entity.toModel()
+                    logs[entity.dateKey] = (logs[entity.dateKey] ?: emptyList()) + log
+                    datesWithLogs[entity.dateKey] = true
+                }
+                val total = logs.values.sumOf { it.size }
+                AppLogger.feedingLogsLoaded(totalDates = logs.size, totalLogs = total)
+            }
+        }
     }
 
-    fun observeDate(context: Context, dateKey: String) {
-        // SharedPreferences — данные уже загружены в init()
-    }
+    // ── CRUD ──────────────────────────────────────────────────────────────────
 
     fun addLog(context: Context, dateKey: String, log: FeedingLog) {
-        val current = logs[dateKey] ?: emptyList()
-        logs[dateKey] = current + log
+        // Обновляем StateMap мгновенно — UI реагирует без задержки
+        logs[dateKey] = (logs[dateKey] ?: emptyList()) + log
         datesWithLogs[dateKey] = true
-        saveToPrefs(context)
+
+        // Сохраняем в Room асинхронно — виден в Database Inspector
+        scope.launch {
+            AppDatabase.getInstance(context).feedingLogDao()
+                .insertLog(log.toEntity(dateKey))
+        }
+
+        AppLogger.feedingLogAdded(
+            type   = log.type.name,
+            date   = dateKey,
+            time   = log.time,
+            food   = log.food,
+            amount = log.amount
+        )
     }
 
     fun removeLog(context: Context, dateKey: String, logId: Int) {
-        val current = logs[dateKey] ?: return
-        val updated = current.filter { it.id != logId }
+        val updated = (logs[dateKey] ?: return).filter { it.id != logId }
         if (updated.isEmpty()) {
             logs.remove(dateKey)
             datesWithLogs.remove(dateKey)
         } else {
             logs[dateKey] = updated
         }
-        saveToPrefs(context)
-    }
 
-    // ── Сериализация ──────────────────────────────────────
-
-    private fun saveToPrefs(context: Context) {
-        val root = JSONObject()
-        logs.forEach { (dateKey, list) ->
-            val arr = JSONArray()
-            list.forEach { log ->
-                arr.put(JSONObject().apply {
-                    put("id",     log.id)
-                    put("type",   log.type.name)
-                    put("food",   log.food)
-                    put("amount", log.amount)
-                    put("time",   log.time)
-                })
-            }
-            root.put(dateKey, arr)
+        scope.launch {
+            AppDatabase.getInstance(context).feedingLogDao().deleteLog(logId)
         }
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .edit().putString(KEY, root.toString()).apply()
+
+        AppLogger.feedingLogDeleted(logId = logId, date = dateKey)
     }
 
-    private fun loadFromPrefs(context: Context) {
+    fun observeDate(context: Context, dateKey: String) { /* данные уже в StateMap */ }
+
+    // ── Миграция SharedPreferences → Room (выполняется один раз) ─────────────
+
+    private suspend fun migrateFromPrefs(context: Context, dao: FeedingLogDao) {
         val json = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .getString(KEY, null) ?: return
-
-        runCatching {
+        try {
             val root = JSONObject(json)
             root.keys().forEach { dateKey ->
-                val arr  = root.getJSONArray(dateKey)
-                val list = mutableListOf<FeedingLog>()
+                val arr = root.getJSONArray(dateKey)
                 for (i in 0 until arr.length()) {
                     val obj = arr.getJSONObject(i)
-                    list.add(FeedingLog(
-                        id     = obj.getInt("id"),
-                        type   = runCatching { MealType.valueOf(obj.getString("type")) }
-                            .getOrDefault(MealType.SNACK),
-                        food   = obj.getString("food"),
-                        amount = obj.getInt("amount"),
-                        time   = obj.getString("time")
+                    dao.insertLog(FeedingLogEntity(
+                        id      = obj.getInt("id"),
+                        dateKey = dateKey,
+                        type    = obj.getString("type"),
+                        food    = obj.getString("food"),
+                        amount  = obj.getInt("amount"),
+                        time    = obj.getString("time")
                     ))
                 }
-                logs[dateKey]          = list
-                datesWithLogs[dateKey] = true
             }
+            // Очищаем SharedPreferences после успешной миграции
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit().remove(KEY).apply()
+        } catch (e: Exception) {
+            AppLogger.jsonLoadError(prefs = PREFS, error = e)
         }
     }
 }
+
+// ── Конвертеры ────────────────────────────────────────────────────────────────
+
+fun FeedingLog.toEntity(dateKey: String) = FeedingLogEntity(
+    id      = id,
+    dateKey = dateKey,
+    type    = type.name,
+    food    = food,
+    amount  = amount,
+    time    = time
+)
+
+fun FeedingLogEntity.toModel() = FeedingLog(
+    id     = id,
+    type   = runCatching { MealType.valueOf(type) }.getOrDefault(MealType.SNACK),
+    food   = food,
+    amount = amount,
+    time   = time
+)

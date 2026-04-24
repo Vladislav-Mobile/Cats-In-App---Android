@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.example.catsinapp.data.DataSource
 import com.example.catsinapp.data.model.CareCategory
 import com.example.catsinapp.data.model.CareExtraBlock
+import com.example.catsinapp.debug.AppLogger
 import com.example.catsinapp.ui.components.HomeHeader
 import com.example.catsinapp.ui.theme.GreenDark
 import com.example.catsinapp.ui.theme.TextPrimary
@@ -44,17 +45,12 @@ fun CareScreen() {
 
     Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
         HomeHeader()
-
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
             Text("Care Tips", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-            Text(
-                "Everything you need to know for your pet's long and happy life",
-                fontSize = 14.sp, color = TextSecondary, lineHeight = 20.sp
-            )
+            Text("Everything you need to know for your pet's long and happy life",
+                fontSize = 14.sp, color = TextSecondary, lineHeight = 20.sp)
         }
-
         Spacer(Modifier.height(8.dp))
-
         LazyVerticalGrid(
             columns               = GridCells.Fixed(3),
             modifier              = Modifier.fillMaxSize(),
@@ -63,26 +59,28 @@ fun CareScreen() {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(categories) { category ->
-                CareCategoryItem(category = category, onClick = { selectedCategory = category })
+                CareCategoryItem(category = category, onClick = {
+                    // ЛОГ: открытие Bottom Sheet
+                    AppLogger.careBottomSheetOpened(
+                        categoryId    = category.id,
+                        categoryTitle = category.title
+                    )
+                    selectedCategory = category
+                })
             }
         }
     }
 
-    // ── Bottom Sheet 3/4 экрана ───────────────────────────
     selectedCategory?.let { cat ->
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
         ModalBottomSheet(
             onDismissRequest = { selectedCategory = null },
             sheetState       = sheetState,
             containerColor   = Color.White,
             shape            = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            // Высота sheet = 3/4 экрана через Modifier на контенте
             dragHandle       = { BottomSheetDefaults.DragHandle() }
         ) {
-            // Фиксируем минимальную высоту = 3/4 высоты экрана
             val sheetHeight = (screenHeightDp * 0.75f).dp
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -91,55 +89,32 @@ fun CareScreen() {
                     .padding(horizontal = 20.dp)
                     .padding(bottom = 40.dp)
             ) {
-                // Header
                 Row(
                     verticalAlignment     = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                     modifier              = Modifier.padding(bottom = 16.dp)
                 ) {
-                    Box(
-                        modifier = Modifier.size(52.dp).clip(CircleShape).background(Color(0xFFC8E6A0)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter            = painterResource(cat.iconRes),
-                            contentDescription = null,
-                            tint               = Color(0xFF3A5C00),
-                            modifier           = Modifier.size(26.dp)
-                        )
+                    Box(modifier = Modifier.size(52.dp).clip(CircleShape).background(Color(0xFFC8E6A0)),
+                        contentAlignment = Alignment.Center) {
+                        Icon(painterResource(cat.iconRes), null,
+                            tint = Color(0xFF3A5C00), modifier = Modifier.size(26.dp))
                     }
                     Text(cat.title, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                 }
-
-                // Описание
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(YellowCard, RoundedCornerShape(16.dp))
-                        .padding(16.dp)
-                ) {
+                Box(modifier = Modifier.fillMaxWidth()
+                    .background(YellowCard, RoundedCornerShape(16.dp)).padding(16.dp)) {
                     Text(cat.description, fontSize = 14.sp, color = TextPrimary, lineHeight = 22.sp)
                 }
-
                 Spacer(Modifier.height(16.dp))
-
                 when (val extra = cat.extraBlock) {
                     is CareExtraBlock.Table        -> TableBlock(extra)
                     is CareExtraBlock.NumberedList -> NumberedListBlock(extra)
                     null                           -> Unit
                 }
-
                 cat.imageRes?.let { imgRes ->
                     Spacer(Modifier.height(16.dp))
-                    Image(
-                        painter            = painterResource(imgRes),
-                        contentDescription = cat.title,
-                        contentScale       = ContentScale.Crop,
-                        modifier           = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                    )
+                    Image(painterResource(imgRes), cat.title, contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(16.dp)))
                 }
             }
         }
@@ -148,25 +123,14 @@ fun CareScreen() {
 
 @Composable
 private fun CareCategoryItem(category: CareCategory, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.White)
-            .clickable { onClick() }
-            .padding(vertical = 12.dp),
+    Column(modifier = Modifier.clip(RoundedCornerShape(16.dp)).background(Color.White)
+        .clickable { onClick() }.padding(vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Box(
-            modifier = Modifier.size(64.dp).clip(CircleShape).background(IconBgColor),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter            = painterResource(category.iconRes),
-                contentDescription = category.title,
-                tint               = Color(0xFF6B3A00),
-                modifier           = Modifier.size(30.dp)
-            )
+        verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Box(modifier = Modifier.size(64.dp).clip(CircleShape).background(IconBgColor),
+            contentAlignment = Alignment.Center) {
+            Icon(painterResource(category.iconRes), category.title,
+                tint = Color(0xFF6B3A00), modifier = Modifier.size(30.dp))
         }
         Text(category.title, fontSize = 12.sp, color = TextPrimary,
             fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
@@ -177,44 +141,34 @@ private fun CareCategoryItem(category: CareCategory, onClick: () -> Unit) {
 private fun TableBlock(table: CareExtraBlock.Table) {
     Column(modifier = Modifier.fillMaxWidth()) {
         if (table.title.isNotBlank()) {
-            Row(
-                verticalAlignment     = Alignment.CenterVertically,
+            Row(verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
-                modifier              = Modifier.padding(bottom = 10.dp)
-            ) {
+                modifier = Modifier.padding(bottom = 10.dp)) {
                 Text("⏱", fontSize = 14.sp)
                 Text(table.title, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
             }
         }
         if (table.hasHeader) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFEEEEE8), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
-            ) {
+            Row(modifier = Modifier.fillMaxWidth()
+                .background(Color(0xFFEEEEE8), RoundedCornerShape(8.dp))
+                .padding(horizontal = 12.dp, vertical = 6.dp)) {
                 Text("FOOD TYPE",  fontSize = 11.sp, fontWeight = FontWeight.Bold,
                     color = TextSecondary, modifier = Modifier.weight(2f))
                 Text("FREQUENCY", fontSize = 11.sp, fontWeight = FontWeight.Bold,
                     color = TextSecondary, modifier = Modifier.weight(2f))
                 Text("PORTION",   fontSize = 11.sp, fontWeight = FontWeight.Bold,
-                    color = TextSecondary, modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.End)
+                    color = TextSecondary, modifier = Modifier.weight(1f), textAlign = TextAlign.End)
             }
             Spacer(Modifier.height(4.dp))
         }
         table.rows.forEach { row ->
-            Row(
-                modifier          = Modifier.fillMaxWidth().padding(vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically) {
                 Box(modifier = Modifier.size(8.dp).background(GreenDark, CircleShape))
                 Spacer(Modifier.width(10.dp))
                 Text(row.label, fontSize = 13.sp, fontWeight = FontWeight.Bold,
                     color = TextPrimary, modifier = Modifier.weight(2f))
-                row.middle?.let {
-                    Text(it, fontSize = 13.sp, color = TextSecondary, modifier = Modifier.weight(2f))
-                }
+                row.middle?.let { Text(it, fontSize = 13.sp, color = TextSecondary, modifier = Modifier.weight(2f)) }
                 Text(row.value, fontSize = 13.sp, fontWeight = FontWeight.Bold,
                     color = GreenDark, modifier = Modifier.weight(1f), textAlign = TextAlign.End)
             }
@@ -225,18 +179,14 @@ private fun TableBlock(table: CareExtraBlock.Table) {
 
 @Composable
 private fun NumberedListBlock(list: CareExtraBlock.NumberedList) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(YellowCard, RoundedCornerShape(16.dp))
-            .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
+    Column(modifier = Modifier.fillMaxWidth()
+        .background(YellowCard, RoundedCornerShape(16.dp)).padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)) {
         list.items.forEach { item ->
             Column {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("${item.number}.", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-                    Text(item.title,        fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                    Text(item.title, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                 }
                 Text("  ${item.text}", fontSize = 13.sp, color = TextSecondary, lineHeight = 18.sp)
             }

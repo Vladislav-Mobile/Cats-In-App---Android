@@ -31,6 +31,7 @@ import coil.compose.AsyncImage
 import com.example.catsinapp.R
 import com.example.catsinapp.data.PetProfileData
 import com.example.catsinapp.data.PetProfileRepository
+import com.example.catsinapp.debug.AppLogger
 import com.example.catsinapp.ui.theme.GreenDark
 import com.example.catsinapp.ui.theme.TextPrimary
 import com.example.catsinapp.ui.theme.TextSecondary
@@ -53,9 +54,7 @@ private fun fieldColors() = OutlinedTextFieldDefaults.colors(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(navController: NavController) {
-    val context = LocalContext.current
-
-    // Подписываемся на Room через Flow → collectAsState
+    val context      = LocalContext.current
     val profileState by PetProfileRepository.getProfile(context).collectAsState(initial = PetProfileData())
 
     var petName  by remember(profileState) { mutableStateOf(profileState.name)      }
@@ -68,13 +67,22 @@ fun ProfileScreen(navController: NavController) {
     var showSaved      by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
 
+    // ЛОГ: загрузка фото при старте экрана
+    LaunchedEffect(profileState.photoUri) {
+        if (profileState.photoUri.isNotBlank()) {
+            AppLogger.photoLoaded(success = true, uri = profileState.photoUri)
+        }
+    }
+
     val photoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let {
             context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
             photoUri = it.toString()
-        }
+            // ЛОГ: новое фото выбрано
+            AppLogger.photoLoaded(success = true, uri = it.toString())
+        } ?: AppLogger.photoLoaded(success = false, uri = "user cancelled")
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -186,18 +194,13 @@ fun ProfileScreen(navController: NavController) {
 
                 Spacer(Modifier.height(8.dp))
 
-                // Кнопки
                 if (isEditing) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         OutlinedButton(
                             onClick = {
-                                // Откат к Room-данным
-                                petName  = profileState.name
-                                dob      = profileState.birthDate
-                                weightKg = profileState.weightKg
-                                weightG  = profileState.weightG
-                                photoUri = profileState.photoUri
-                                isEditing = false
+                                petName = profileState.name; dob = profileState.birthDate
+                                weightKg = profileState.weightKg; weightG = profileState.weightG
+                                photoUri = profileState.photoUri; isEditing = false
                             },
                             modifier = Modifier.weight(1f).height(50.dp),
                             shape = RoundedCornerShape(26.dp),
@@ -206,16 +209,19 @@ fun ProfileScreen(navController: NavController) {
 
                         Button(
                             onClick = {
-                                // Сохраняем в Room (видно в Database Inspector)
                                 PetProfileRepository.saveProfile(context, PetProfileData(
+                                    name = petName, birthDate = dob,
+                                    weightKg = weightKg, weightG = weightG, photoUri = photoUri
+                                ))
+                                // ЛОГ: сохранение профиля
+                                AppLogger.profileSaved(
                                     name      = petName,
-                                    birthDate = dob,
+                                    dob       = dob,
                                     weightKg  = weightKg,
                                     weightG   = weightG,
-                                    photoUri  = photoUri
-                                ))
-                                isEditing = false
-                                showSaved = true
+                                    hasPhoto  = photoUri.isNotBlank()
+                                )
+                                isEditing = false; showSaved = true
                             },
                             modifier = Modifier.weight(1f).height(50.dp),
                             shape = RoundedCornerShape(26.dp),
@@ -236,12 +242,10 @@ fun ProfileScreen(navController: NavController) {
                         Text("Change Weight Data", fontSize = 15.sp, fontWeight = FontWeight.Medium)
                     }
                 }
-
                 Spacer(Modifier.height(16.dp))
             }
         }
 
-        // Snackbar
         if (showSaved) {
             LaunchedEffect(Unit) { kotlinx.coroutines.delay(2000); showSaved = false }
             Box(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp)
@@ -252,7 +256,6 @@ fun ProfileScreen(navController: NavController) {
         }
     }
 
-    // DatePicker
     if (showDatePicker) {
         val dpState = rememberDatePickerState()
         DatePickerDialog(
@@ -277,13 +280,9 @@ fun ProfileScreen(navController: NavController) {
 @Composable private fun FieldLabel(label: String) {
     Text(label, fontSize = 11.sp, color = AmberLabel, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
 }
-
 @Composable private fun ReadField(content: @Composable () -> Unit) {
-    Box(modifier = Modifier.fillMaxWidth().background(YellowCard, RoundedCornerShape(16.dp)).padding(16.dp)) {
-        content()
-    }
+    Box(modifier = Modifier.fillMaxWidth().background(YellowCard, RoundedCornerShape(16.dp)).padding(16.dp)) { content() }
 }
-
 @Composable private fun WeightCard(value: String, unit: String, modifier: Modifier) {
     Column(modifier = modifier.background(YellowCard, RoundedCornerShape(16.dp)).padding(16.dp)) {
         Text(value, fontSize = 32.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
