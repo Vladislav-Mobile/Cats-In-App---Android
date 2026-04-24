@@ -104,10 +104,72 @@ fun DevMenuDialog(visible: Boolean, onDismiss: () -> Unit) {
                 onDismiss()
             }
 
+            // ── 50 записей кормлений (24–28 апреля 2026) ──────────────────────
+            DevMenuButton(label = "📅 Загрузить 50 записей (24–28 апр 2026)") {
+                scope.launch {
+                    val dao = AppDatabase.getInstance(context).feedingLogDao()
+                    listOf(
+                        // 24 апреля
+                        FeedingLogEntity(3001,"2026-04-24","BREAKFAST","Whiskas курица",80,"07:30"),
+                        FeedingLogEntity(3002,"2026-04-24","SNACK","Dreamies лакомство",15,"10:00"),
+                        FeedingLogEntity(3003,"2026-04-24","LUNCH","Felix говядина",70,"12:30"),
+                        FeedingLogEntity(3004,"2026-04-24","SNACK","Brit Premium паштет",30,"14:00"),
+                        FeedingLogEntity(3005,"2026-04-24","DINNER","Sheba тунец",85,"17:00"),
+                        FeedingLogEntity(3006,"2026-04-24","SNACK","Purina One сухой",20,"19:00"),
+                        FeedingLogEntity(3007,"2026-04-24","DINNER","RC Adult сухой",90,"20:00"),
+                        FeedingLogEntity(3008,"2026-04-24","SNACK","Animonda Carny",25,"21:30"),
+                        FeedingLogEntity(3009,"2026-04-24","BREAKFAST","Leonardo лосось",75,"08:00"),
+                        FeedingLogEntity(3010,"2026-04-24","LUNCH","Hills Science Diet",65,"13:00"),
+                        // 25 апреля
+                        FeedingLogEntity(3011,"2026-04-25","BREAKFAST","Whiskas рыба",80,"07:45"),
+                        FeedingLogEntity(3012,"2026-04-25","SNACK","Dreamies курица",15,"09:30"),
+                        FeedingLogEntity(3013,"2026-04-25","LUNCH","Felix суп тунец",50,"12:00"),
+                        FeedingLogEntity(3014,"2026-04-25","SNACK","Brit Care мусс",30,"14:30"),
+                        FeedingLogEntity(3015,"2026-04-25","DINNER","Sheba паштет",90,"17:30"),
+                        FeedingLogEntity(3016,"2026-04-25","SNACK","Purina Felix",20,"19:30"),
+                        FeedingLogEntity(3017,"2026-04-25","DINNER","RC Kitten сухой",85,"20:30"),
+                        FeedingLogEntity(3018,"2026-04-25","SNACK","Animonda тунец",25,"22:00"),
+                        FeedingLogEntity(3019,"2026-04-25","BREAKFAST","Leonardo говядина",70,"08:15"),
+                        FeedingLogEntity(3020,"2026-04-25","LUNCH","Hills Urinary Care",60,"13:30"),
+                        // 26 апреля
+                        FeedingLogEntity(3021,"2026-04-26","BREAKFAST","Whiskas ягнёнок",80,"07:30"),
+                        FeedingLogEntity(3022,"2026-04-26","SNACK","Dreamies сыр",15,"10:15"),
+                        FeedingLogEntity(3023,"2026-04-26","LUNCH","Felix кролик",70,"12:15"),
+                        FeedingLogEntity(3024,"2026-04-26","SNACK","Brit Premium курица",35,"14:00"),
+                        FeedingLogEntity(3025,"2026-04-26","DINNER","Sheba говядина",85,"17:00"),
+                        FeedingLogEntity(3026,"2026-04-26","SNACK","Purina One Indoor",20,"19:15"),
+                        FeedingLogEntity(3027,"2026-04-26","DINNER","RC Sterilised",90,"20:15"),
+                        FeedingLogEntity(3028,"2026-04-26","SNACK","Animonda лосось",20,"21:45"),
+                        FeedingLogEntity(3029,"2026-04-26","BREAKFAST","Leonardo тунец",75,"08:30"),
+                        FeedingLogEntity(3030,"2026-04-26","LUNCH","Hills Sensitive",65,"13:15"),
+                        // 27 апреля
+                        FeedingLogEntity(3031,"2026-04-27","BREAKFAST","Whiskas курица",80,"07:00"),
+                        FeedingLogEntity(3032,"2026-04-27","SNACK","Dreamies лосось",15,"09:45"),
+                        FeedingLogEntity(3033,"2026-04-27","LUNCH","Felix говядина суп",55,"12:30"),
+                        FeedingLogEntity(3034,"2026-04-27","SNACK","Brit Care паштет",30,"14:15"),
+                        FeedingLogEntity(3035,"2026-04-27","DINNER","Sheba лосось",90,"17:15"),
+                        FeedingLogEntity(3036,"2026-04-27","SNACK","Purina Gourmet",25,"19:00"),
+                        FeedingLogEntity(3037,"2026-04-27","DINNER","RC Light сухой",85,"20:00"),
+                        FeedingLogEntity(3038,"2026-04-27","SNACK","Animonda говядина",20,"21:30"),
+                        FeedingLogEntity(3039,"2026-04-27","BREAKFAST","Leonardo курица",75,"08:00"),
+                        FeedingLogEntity(3040,"2026-04-27","LUNCH","Hills Indoor",60,"13:00"),
+                        // 28 апреля
+                        FeedingLogEntity(3041,"2026-04-28","BREAKFAST","Whiskas тунец",80,"07:15"),
+                        FeedingLogEntity(3042,"2026-04-28","SNACK","Dreamies говядина",15,"10:00"),
+                        FeedingLogEntity(3043,"2026-04-28","LUNCH","Felix паштет",70,"12:45"),
+                        FeedingLogEntity(3044,"2026-04-28","SNACK","Brit Premium рыба",30,"14:30"),
+                        FeedingLogEntity(3045,"2026-04-28","DINNER","Sheba курица",85,"17:30"),
+                        FeedingLogEntity(3046,"2026-04-28","SNACK","Purina Felix сухой",20,"19:45"),
+                        FeedingLogEntity(3047,"2026-04-28","DINNER","RC Hairball сухой",90,"20:45"),
+                        FeedingLogEntity(3048,"2026-04-28","SNACK","Animonda кролик",25,"22:00"),
+                        FeedingLogEntity(3049,"2026-04-28","BREAKFAST","Leonardo говядина",75,"08:45"),
+                        FeedingLogEntity(3050,"2026-04-28","LUNCH","Hills Kitten",65,"13:45")
+                    ).forEach { dao.insertLog(it) }
+                }
+                onDismiss()
+            }
+
             // ── Database Inspector ─────────────────────────────────────────────
-            // Заполняет обе таблицы тестовыми данными —
-            // после нажатия открой Database Inspector, кликни на таблицу
-            // и увидишь строки (двойной клик по ячейке = редактирование)
             DevMenuButton(label = "🗄️ Fill Test Data (для DB Inspector)") {
                 scope.launch {
                     val db  = AppDatabase.getInstance(context)
