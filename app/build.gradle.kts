@@ -13,7 +13,7 @@ android {
         applicationId = "com.example.catsinapp"
         minSdk = 29
         targetSdk = 36
-        versionCode = 1
+        versionCode = 3
         versionName = "2.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
