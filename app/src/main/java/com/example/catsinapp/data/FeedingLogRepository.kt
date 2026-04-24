@@ -11,6 +11,7 @@ import com.example.catsinapp.debug.AppLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -52,16 +53,20 @@ object FeedingLogRepository {
                 }
             }
 
-            // Загружаем всё из Room в StateMap (виден в Database Inspector)
-            val all = dao.getAllLogs()
-            withContext(Dispatchers.Main) {
-                all.forEach { entity ->
-                    val log = entity.toModel()
-                    logs[entity.dateKey] = (logs[entity.dateKey] ?: emptyList()) + log
-                    datesWithLogs[entity.dateKey] = true
+            // Подписываемся на Flow — UI обновляется автоматически при любом
+            // изменении таблицы: через приложение, DB Inspector или SQL-запрос.
+            dao.observeAllLogs().collectLatest { entities ->
+                withContext(Dispatchers.Main) {
+                    logs.clear()
+                    datesWithLogs.clear()
+                    entities.forEach { entity ->
+                        val log = entity.toModel()
+                        logs[entity.dateKey] = (logs[entity.dateKey] ?: emptyList()) + log
+                        datesWithLogs[entity.dateKey] = true
+                    }
+                    val total = logs.values.sumOf { it.size }
+                    AppLogger.feedingLogsLoaded(totalDates = logs.size, totalLogs = total)
                 }
-                val total = logs.values.sumOf { it.size }
-                AppLogger.feedingLogsLoaded(totalDates = logs.size, totalLogs = total)
             }
         }
     }

@@ -4,12 +4,18 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FeedingLogDao {
 
     @Query("SELECT * FROM feeding_logs ORDER BY dateKey DESC, time ASC")
     suspend fun getAllLogs(): List<FeedingLogEntity>
+
+    // Flow-версия: автоматически эмитит при любом изменении таблицы
+    // (в том числе при SQL-запросах из DB Inspector)
+    @Query("SELECT * FROM feeding_logs ORDER BY dateKey DESC, time ASC")
+    fun observeAllLogs(): Flow<List<FeedingLogEntity>>
 
     @Query("SELECT * FROM feeding_logs WHERE dateKey = :dateKey ORDER BY time ASC")
     suspend fun getLogsByDate(dateKey: String): List<FeedingLogEntity>
